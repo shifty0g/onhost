@@ -1,0 +1,1 @@
+wmic /NAMESPACE:\\root\directory\ldap PATH ds_computer GET ds_cn | findstr /v "^$" | ForEach-object { $_.TrimEnd() } | select -Skip 1 | Tee targets.txt

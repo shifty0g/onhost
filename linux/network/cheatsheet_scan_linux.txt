@@ -1,0 +1,293 @@
+#########################
+nmap 
+#########################
+
+# pingsweep
+
+./nmap -vvv -T4 -n -sP -oA nmap_ping <network/sn>
+
+
+# port scan TCP top 50 (no ping)
+
+./nmap -vvv --min-rate 400 --min-parallelism 200 --min-hostgroup=257 -Pn -n -T4 --open -p 21-23,25-26,53,80-81,110-111,113,134-139,143,179,199,443,445,465,512-515,548,554,587,993,995,1025-1026,1433,1434,1720,1723,2000-2001,2049,3306,3389,5060,5432,5900,5901,6001,8000,8080,8081,8443,8888,10000,15432,32768,49152 -oA nmap_tcp_noping <target network/24>
+
+
+# port scan UDP top 10 (no ping)
+
+./nmap -vvv --min-rate 400 --min-parallelism 100 --min-hostgroup=257 -Pn -sU -n -T4 --open -p53,67,123,135,137-138,161,445,631,1434 -oA nmap_udp_noping <network/sn>
+
+
+# port scan TCP full ports 
+
+./nmap -vvv --min-rate 400 --min-parallelism 100 --min-hostgroup=257 -sT -n -T4 -p- -oA nmap_tcp_full <network/sn>
+
+
+
+
+
+
+
+
+
+#########################
+Grip
+#########################
+
+./grip 192.168.0.1/24 file=grip.txt
+
+./grip sockets=300 21,22,23,25,26,53,80-81,110,111,113,134-139,143,179,199,443,445,465,512-515,548,554,587,993,995,1025-1026,1433,1434,1720,1723,2000-2001,2049,3306,3389,5060,5432,5900,5901,6001,8000,8080,8081,8443,8888,10000,15432,32768,49152 192.168.0.0/24 file=grip.txt
+
+./grip sockets=200 80,445,3389,5985,445,22,21,23,25,53,110,111,135,512,513,514,2049,5432,1443,3306,5900,8080,8081 192.168.0.0/24 file=grip2.txt
+
+
+
+
+
+
+
+
+
+#########################
+Bash
+#########################
+
+# Ping Sweep - THIS JUST WORKS 
+
+for i in $(seq 254); do ping 192.168.1.$i -c1 -W1 & done | grep from
+
+for i in $(seq 254); do (ping -c 1 192.168.0.$i | grep "bytes from" &) ;done
+
+for i in {1..254} ;do (ping -c 1 192.168.1.$i | grep "bytes from" &) ;done
+
+
+
+export NET="0.0.0"; for i in $(seq 1 254); do (ping -c1 -W1 $NET.$i > /dev/null && echo "$NET.$i" | tee -a sweep.txt &); done
+
+export NET="0.0.0"; for i in $(seq 1 254); do (ping -c1 -W1 "$NET.$i" | grep 'bytes from' | cut -d' ' -f4 | cut -d':' -f1 | tee -a sweep.txt &); done
+
+for i in {1..254} ;do (ping -c 1 192.168.1.$i | grep "bytes from" &) ;done
+
+
+
+# Port Scan
+
+bash ./bash-portscan.sh [IP] [PORTS]
+
+# FULL 65k port scan of a single host
+
+export ip=192.168.80.145; for port in $(seq 1 65535); do timeout 0.01 bash -c "</dev/tcp/$ip/$port && echo "$ip:$port"" 2>/dev/null; done
+
+
+# Defined list of ports 
+
+export PORTS="21,22,23,25,26,53,80,81,110,111,113,134,135,136,137,139,143,179,199,443,445,465,512,513,514,515,548,554,587,993,995,1025,1026,1433,1443,1434,1720,1723,2000,2001,2049,3306,3389,5060,5432,5900,5901,6000,6001,8000,8080,8081,8443,8888,10000,15432,32768,49152,5985"
+
+export ip=192.168.80.145; for port in $(echo $PORTS | sed "s/,/ /g"); do timeout 0.01 bash -c "</dev/tcp/$ip/$port && echo "$ip:$port"" 2>/dev/null; done
+
+
+
+
+
+
+
+
+
+#########################
+port-scanner-go-linux
+#########################
+
+set the PORTS and IP (first 3 octects) variables first 
+
+export PORTS="80,81,443,3389,5985,445,22,21,23,25,53,110,111,389,636,135,512,513,514,2049,5432,1443,3306,5900,8080,8081,8443"
+export IP="192.168.0"
+for i in {1..254} ;do (echo [=] $IP.$i && ./port-scanner-go-linux --ip $IP.$i --port $PORTS) ;done
+
+
+
+
+
+
+
+
+                       
+#########################
+netscan-linux
+#########################
+
+export PORTS="80,81,443,3389,5985,445,22,21,23,25,53,110,111,389,636,135,512,513,514,2049,5432,1443,3306,5900,8080,8081,8443"
+
+./netscan-linux-amd64 --ports $PORTS 192.168.0.0/24 
+
+./netscan-linux-386 --ports 22,3389,2049,111,23,5432,3306,1143,23,21 192.168.0.0/24 
+
+
+
+
+
+
+
+
+
+
+#########################
+nc 
+#########################
+
+# Single IP - Scan specific ports 
+
+./nc -nv 192.168.0.22 1433
+
+./nc -zvn 192.168.0.1 21 25 22 80 53 3389 445 443 1433 2433 3396 5432 15432 2049 5985 111 389 8443 8080 8081
+
+./nc -v -n -z -w 2 10.0.0.10 22 3389 5985 80 443 53 2049 3306 5432 1433 
+
+./nc2 192.168.0.1 -w 3 -nvz 21 22 23 25 26 53 80 81 110 111 113 134 135 136 137 139 143 179 199 443 445 465 512 513 514 515 548 554 587 993 995 1025 1026 1433 1
+1434 1720 1723 2000 2001 2049 3306 3389 5060 5432 5900 5901 6000 6001 8000 8080 8081 8443 8888 10000 15432 32768 49152 5985
+
+
+export PORTS="21 22 23 25 26 53 80 81 110 111 113 134 135 136 137 139 143 179 199 443 445 465 512 513 514 515 548 554 587 993 995 1025 1026 1433 1
+1434 1720 1723 2000 2001 2049 3306 3389 5060 5432 5900 5901 6000 6001 8000 8080 8081 8443 8888 10000 15432 32768 49152 5985"
+
+./nc2 192.168.0.1 -w 3 -nvz $PORTS
+
+
+
+
+# Single IP - Scan a port range
+
+for x in $(seq 20 30); do nc -nvz 172.16.36.135 $x; done
+
+
+
+# Sweep network 0-255 scanning specific ports  (slow)
+
+export PORTS="80 443 3389 5985 445 22 21 23 53 110 111 135 512 513 514 2049 5432 1443 3306 5900 8080 8081 15432"
+
+for x in $(seq 0 255); do ./nc -v -n -z -w 2 172.16.36.$x $PORTS 2>&1 | grep open | cut -d " " -f 2-4; done
+
+
+
+
+# Scan through set list of ports
+
+for x in $(echo $PORTS | sed "s/,/ /g"); do ./nc -v -n -z -w 2 192.168.0.1 $PORTS 2>&1 | grep open | cut -d " " -f 2-4; done
+
+
+
+
+
+
+
+
+
+
+
+
+#########################
+Busybox
+#########################
+
+./busybox-pingsweep.sh 192.168.0
+./busybox-portscan.sh 192.168.0 80,443,123,445
+
+
+# alive hosts in ips.txt - loop through and scan the ports. use the pingsweep to get a list
+
+cat ips.txt | while read line; do ./busybox-portscan.sh $line 22,445,3389,80,443,53,2049,5432,1443,3306; done
+
+
+
+# this will ping sweep then port scan. not adding ports uses built in list
+
+./busybox-sweep-quickports-ping.sh 192.168.0
+./busybox-sweep-quickports-ping.sh 192.168.0 22,445,5432,3389
+
+
+
+export PORTS="80 443 3389 5985 445 22 21 23 53 110 111 135 512 513 514 2049 5432 1443 3306 5900 8080 8081 15432"
+
+for x in $(echo $PORTS); do busybox nc -v -n -z -w 2 192.168.0.1 $x 2>&1; done
+
+
+
+
+
+
+#########################
+Socat
+#########################
+
+# Scan a single port 
+
+./socat -T2 - TCP4:192.168.0.22:443
+
+# script to scan 
+
+./socat-portscan.sh [IP] [PORTS]
+
+
+# scan single host with portlists 
+
+export PORTS="80 443 3389 5985 445 22 21 23 53 110 111 135 512 513 514 2049 5432 1443 3306 5900 8080 8081 15432"
+
+export NET="192.168.0.1";for x in $(echo $PORTS); do ./socat3 -T2 - TCP4:$NET:$x 2>/dev/null >/dev/null&& echo "$NET:$x" ; done
+
+
+
+
+
+
+#########################
+nping 
+#########################
+
+# Ping Sweep
+
+./nping 192.168.0.0/24 | grep reply
+
+# Scan single port across subnet
+
+./nping --tcp 192.168.0.0/24 -p22 | grep mss
+
+./nping --tcp 192.168.0.0/24 -p22,80,443,1443,5432,2049  | grep mss
+
+export PORTS="21,22,23,25,26,53,80,81,110,111,113,134,135,136,137,139,143,179,199,443,445,465,512,513,514,515,548,554,587,993,995,1025,1026,1433,1434,1720,1723,2000,2001,2049,3306,3389,5060,5432,5900,5901,6000,6001,8000,8080,8081,8443,8888,10000,15432,32768,49152,5985"
+
+./nping --tcp 192.168.0.0/24 -p$PORTS | grep mss
+
+
+
+
+#########################
+fping 
+#########################
+
+./fping -g 192.168.0.0/24 -a
+
+
+
+
+
+
+
+#########################
+aping
+#########################
+
+./aping  <network/SN> | tee aping.txt
+./aping -file targets.txt | tee aping.txt
+
+
+
+
+
+#########################
+brs.sh
+#########################
+
+./brs.sh <protocols> <ip_addres>/<netmask> [<Port>]
+./brs.sh tcp 192.168.0.1/24 22
+./brs.sh icmp 192.168.0.1/16
+./brs.sh tcp,icmp 192.168.0.1/24 22
+
+

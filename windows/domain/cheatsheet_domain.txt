@@ -1,0 +1,155 @@
+
+
+####################################
+PowerView
+####################################
+Import-Module .\PowerView.ps1
+
+Get-Domain
+
+Find-DomainShare
+
+
+
+
+
+
+
+
+####################################
+ADPeas - Powershell 
+####################################
+https://github.com/61106960/adPEAS
+
+doesnt seem to work well with PowerShellv2
+
+Import-Module .\adPEAS.ps1
+
+Invoke-adPEAS | Tee C:\windows\temp\ADRecon.txt
+
+
+
+
+
+
+
+
+
+
+####################################
+ADRecon - Powershell 
+####################################
+https://github.com/adrecon/ADRecon
+
+
+# this will create  csv, json outputs ...does not do STDOUT
+.\ADRecon.ps1 -OutputType ALL 
+
+.\ADRecon.ps1 -OutputType STDOUT | Tee C:\windows\temp\ADRecon.txt
+
+
+
+
+
+
+
+
+
+
+####################################
+ADCollector .NET 
+####################################
+https://github.com/dev-2null/ADCollector
+
+.\ADCollector.exe | Tee C:\Windows\Temp\ADCollector.txt
+ 
+ 
+
+
+
+
+
+
+
+
+####################################
+PingCastle
+####################################
+https://github.com/vletoux/pingcastle
+
+.\PingCastle.exe --healthcheck --log
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+####################################
+ADFind
+####################################
+
+.\AdFind.exe -f samaccountname=CSASuser
+ 
+.\AdFind.exe -h 10.1.1.1 -u domain\user -up pass
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+####################################
+Import-ActiveDirectory
+####################################
+https://github.com/samratashok/ADModule
+ 
+ 
+ 
+ 
+ 
+ 
+
+####################################
+DSQuery
+####################################
+ 
+# List out All Users 
+
+dsquery User > C:\windows\temp\dsquery-users.txt
+
+# Check if specific User Exists
+
+dsquery user -name CSASuser -s DC1
+
+# Get all attributes of all users 
+
+dsquery * -limit 0 -filter "&(objectClass=User)(objectCategory=Person)" -attr * | tee  C:\windows\temp\dsquery-users-attr.txt
+
+# Search the file 
+
+cat C:\windows\temp\dsquery-users-attr.txt | Select-String manage
+
+# List Users and Descriptions 
+
+Dsquery * -limit 0 -filter "&(objectClass=User)(objectCategory=Person)" -attr name description
+
+# List Users with Managers
+
+Dsquery * -limit 0 -filter "&(objectClass=User)(manager=*)" -attr name description manager
+
+
+# Get All Attributes of specific User 
+
+dsquery * -filter "&(samaccountname=CSASuser)" -limit 0 -attr *
+
+dsquery * -filter "(&(objectcategory=person)(objectclass=user)(samaccountname=CSASuser))" -limit 0 -attr *
+
+Dsquery * -limit 0 -filter "&(userPrincipalName=CSASuser*)" -attr *
+

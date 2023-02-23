@@ -1,0 +1,69 @@
+DumpWin v2.0 (Windows NT/2K)    					
+Network Intelligence India Pvt. Ltd.
+http://www.nii.co.in
+Arjun Pednekar (arjunp@nii.co.in)
+
+==================================================================
+
+Information 
+===========
+
+DumpWin is a command-line tool to dump all the important information of the system where it is executed. This tool is designed keeping in mind that an auditor now need not carry his "tool-kit" around to get the system audit done. This is an all-in-one tool that can gather the following information in a matter of seconds:
+
+1. Installed Programs: Dumpinfo will display the list of all the 
+   installed softwares present in the system. 
+   Usage: DumpWin -i
+
+2. Drive Information: List of all the drives present along with the
+   Volume Name, File System, Total size and free space remaining on
+   the disk will be shown.
+   Usage: DumpWin -d
+
+3. System Information: Displays the Machine Information viz. OS,
+   Computer name, System Directory, RAM details, IP address(s),
+   Hardware Information including Keyboard type.
+   Usage: DumpWin -s
+
+4. Modem Information: Displays the number of modems/modem drivers
+   present on the system along with details.
+   Usage: DumpWin -m
+
+5. Shares Present: Displays detailed information on all the shares 
+   present on the system.  The detailed information includes the 
+   Owner, Group, Permissions, etc.
+   Usage: DumpWin -h
+
+6. Startup Programs: List the applications that will be started 
+   automatically on startup.
+   Usage: DumpWin -t
+
+7. Active Processes: Lists all the active processes along with the 
+   module (DLL) names and path names of the exe's.
+   Usage: DumpWin -p
+
+8. Services: Displays the lists of services present on the system 
+   along with the status.
+   Usage: DumpWin -v
+
+9. Local Group Accounts: List the group accounts along with its 
+   description.
+   Usage: DumpWin -g
+
+10. Local User Accounts: List local user accounts along with its 
+    description and privilege.
+    Usage: DumpWin -u
+
+11. DumpACL: Dumps the Security Descriptor and ACL's for the list 
+    of file paths and registry Keys specified in the file.
+    Usage: DumpWin -lf "filePathlist.txt"
+    Usage: DumpWin -lf "RegistryKeys.txt"
+         where filePathlist.txt contains the list of files
+	       to be audited
+	 and RegistryKeys.txt contains the list of registry
+	       keys to be audited.
+
+12. Account Lockout Policy: Shows the account lock-out policy
+    for the local system.
+    Usage: DumpWin -n
+
+=============================================================================

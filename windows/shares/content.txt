@@ -1,0 +1,32 @@
+PRIVATE KEY
+aws_secret_access_key
+privatekey
+ovpn
+cpassword
+ConvertTo-SecureString
+password
+user
+secret
+cred
+keepass
+keypass
+pass
+login
+backup
+account
+finance
+confidential
+creds
+aws_access_key_id
+private
+connection
+Data Source
+Server=
+database
+CSAS-ENUM
+CSAS
+csas
+crest
+trophy
+flag
+creds

